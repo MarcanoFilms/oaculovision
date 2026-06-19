@@ -26,7 +26,7 @@ class Bip110Detector(Static):
     """Analyzes recent blocks for BIP-110 violations and spam patterns."""
 
     BINDINGS = [
-        Binding("enter", "open_block_detail", "Detalle", show=True),
+        Binding("enter", "open_block_detail", "Detail", show=True),
     ]
 
     DEFAULT_CSS = """
@@ -67,8 +67,8 @@ class Bip110Detector(Static):
 
     def compose(self) -> ComposeResult:
         with Vertical():
-            yield Label("Analizando cadena...", id="tip-panel", classes="tip-title")
-            yield Label("↑↓ navegar  ·  Enter detalle", classes="nav-hint")
+            yield Label("Analyzing chain...", id="tip-panel", classes="tip-title")
+            yield Label("↑↓ navigate  ·  Enter detail", classes="nav-hint")
             yield DataTable(id="blocks-table", zebra_stripes=True, cursor_type="row")
 
     def on_mount(self) -> None:
@@ -132,7 +132,7 @@ class Bip110Detector(Static):
         self._blocks_by_height.clear()
 
         if not self._tip:
-            tip_label.update("Sin datos de bloques.")
+            tip_label.update("No block data available.")
             return
 
         t = self._tip

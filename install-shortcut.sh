@@ -16,7 +16,7 @@ VENV_PYTHON="\${PROJECT_DIR}/.venv/bin/python"
 MAIN="\${PROJECT_DIR}/main.py"
 
 if [[ ! -f "\${VENV_PYTHON}" ]]; then
-    echo "oraculovision: entorno virtual no encontrado." >&2
+    echo "oraculovision: virtual environment not found." >&2
     echo "  cd \${PROJECT_DIR} && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt" >&2
     exit 1
 fi
@@ -26,5 +26,5 @@ exec "\${VENV_PYTHON}" "\${MAIN}" "\$@"
 EOF
 
 chmod +x "${SCRIPT}"
-echo "Instalado: ${SCRIPT}"
-echo "Usa: oraculovision"
+echo "Installed: ${SCRIPT}"
+echo "Run: oraculovision"

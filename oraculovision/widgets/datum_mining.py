@@ -32,14 +32,14 @@ class DatumMining(Static):
 
     def compose(self) -> ComposeResult:
         with Vertical():
-            yield Label("Consultando DATUM...", id="datum-content", classes="datum-metric")
+            yield Label("Querying DATUM...", id="datum-content", classes="datum-metric")
 
     def refresh_data(self) -> None:
         label = self.query_one("#datum-content", Label)
         status = fetch_datum_status()
 
         if not status.available:
-            label.update(status.setup_hint or "DATUM no disponible.")
+            label.update(status.setup_hint or "DATUM unavailable.")
             label.remove_class("datum-ok")
             label.add_class("datum-warn")
             return

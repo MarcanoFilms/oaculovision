@@ -48,7 +48,7 @@ class LiveCharts(Static):
     def compose(self) -> ComposeResult:
         if PlotextPlot is None:
             yield Label(
-                "textual-plotext no instalado. pip install textual-plotext",
+                "textual-plotext not installed. pip install textual-plotext",
                 classes="chart-error",
             )
             return

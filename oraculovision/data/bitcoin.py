@@ -39,8 +39,8 @@ class BitcoinCLI:
     def call(self, method: str, *params: Any) -> Any:
         if not shutil.which(self.cli_path) and not os.path.isabs(self.cli_path):
             raise BitcoinCLIError(
-                f"bitcoin-cli no encontrado: {self.cli_path}",
-                hint="Instala Bitcoin Knots o define BITCOIN_CLI=/ruta/a/bitcoin-cli",
+                f"bitcoin-cli not found: {self.cli_path}",
+                hint="Install Bitcoin Knots or set BITCOIN_CLI=/path/to/bitcoin-cli",
             )
 
         cmd = self._base_cmd() + [method]
@@ -62,13 +62,13 @@ class BitcoinCLI:
             )
         except subprocess.TimeoutExpired as exc:
             raise BitcoinCLIError(
-                f"Timeout llamando {method} ({self.timeout}s)",
-                hint="El nodo puede estar ocupado o no responder.",
+                f"Timeout calling {method} ({self.timeout}s)",
+                hint="The node may be busy or unresponsive.",
             ) from exc
         except FileNotFoundError as exc:
             raise BitcoinCLIError(
-                f"bitcoin-cli no encontrado: {self.cli_path}",
-                hint="Verifica la instalación de Knots/Core.",
+                f"bitcoin-cli not found: {self.cli_path}",
+                hint="Check your Knots/Core installation.",
             ) from exc
 
         if result.returncode != 0:
@@ -76,10 +76,10 @@ class BitcoinCLI:
             hint = None
             lower = stderr.lower()
             if "could not connect" in lower or "connection refused" in lower:
-                hint = "Inicia bitcoind/knots y verifica RPC (bitcoin.conf)."
+                hint = "Start bitcoind/knots and check RPC (bitcoin.conf)."
             elif "verifying blocks" in lower or "initial block download" in lower:
-                hint = "El nodo aún sincroniza. Espera a que termine IBD."
-            raise BitcoinCLIError(stderr or f"Error en {method}", hint=hint)
+                hint = "Node still syncing. Wait for IBD to finish."
+            raise BitcoinCLIError(stderr or f"Error in {method}", hint=hint)
 
         stdout = result.stdout.strip()
         if not stdout:

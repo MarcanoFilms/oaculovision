@@ -49,7 +49,7 @@ class NodeStatus(Static):
     def compose(self) -> ComposeResult:
         with Vertical():
             yield Label("", id="alert-line", classes="alert-line")
-            yield Label("Cargando...", id="node-content", classes="metric")
+            yield Label("Loading...", id="node-content", classes="metric")
 
     def refresh_data(self) -> None:
         label = self.query_one("#node-content", Label)
@@ -107,10 +107,10 @@ class NodeStatus(Static):
 
         alerts_msgs: list[str] = []
         if self.alert_peers:
-            alerts_msgs.append(f"⚠ Pocos peers ({peers} < {alerts.min_peers})")
+            alerts_msgs.append(f"⚠ Low peers ({peers} < {alerts.min_peers})")
         if self.alert_mempool:
             alerts_msgs.append(
-                f"⚠ Mempool congestionado ({mempool_tx:,} tx / {mempool_mb:.1f} MB)"
+                f"⚠ Congested mempool ({mempool_tx:,} tx / {mempool_mb:.1f} MB)"
             )
         self.alert_message = "  ·  ".join(alerts_msgs)
         alert_line.update(self.alert_message)
@@ -127,7 +127,7 @@ class NodeStatus(Static):
                     age = int((now - self._utxo_fetched_at) / 60)
                     txouts = self._utxo_cache.get("txouts", 0)
                     return f"UTXO set:  {txouts:,}  (cached {age}m ago)"
-                return "UTXO set:  [dim]actualizando… (gettxoutsetinfo lento)[/]"
+                return "UTXO set:  [dim]updating… (gettxoutsetinfo is slow)[/]"
 
         txouts = self._utxo_cache.get("txouts", 0)
         disk = self._utxo_cache.get("disk_size", 0) / 1_000_000_000

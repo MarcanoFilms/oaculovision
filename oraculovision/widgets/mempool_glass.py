@@ -24,9 +24,9 @@ def _render_glass(comp: MempoolComposition, mempool_tx: int, mempool_mb: float) 
 
     lines = [
         (
-            f"[bold #ffd700]Basado en Block Template[/]  "
+            f"[bold #ffd700]Based on Block Template[/]  "
             f"#{comp.template_height}  ·  {comp.analyzed_tx:,} txs  ·  "
-            f"{comp.fill_pct:.1f}% peso máx"
+            f"{comp.fill_pct:.1f}% max weight"
         ),
         (
             f"Mempool total: {mempool_tx:,} tx ({mempool_mb:.2f} MB)  ·  "
@@ -49,9 +49,9 @@ def _render_glass(comp: MempoolComposition, mempool_tx: int, mempool_mb: float) 
 
     spam_pct = comp.pct(comp.spam_weight)
     if spam_pct > 30:
-        lines.append("\n[red bold]⚠ Template muy sucio — alto impacto BIP-110[/]")
+        lines.append("\n[red bold]⚠ Very dirty template — high BIP-110 impact[/]")
     elif spam_pct > 15:
-        lines.append("\n[yellow]⚠ Spam elevado en próximo bloque[/]")
+        lines.append("\n[yellow]⚠ Elevated spam in next block[/]")
 
     return "\n".join(lines)
 
@@ -86,7 +86,7 @@ class MempoolGlass(Static):
         self._last_spam_pct: float = 0.0
 
     def compose(self) -> ComposeResult:
-        yield Label("Analizando block template...", id="glass-content", classes="glass-content")
+        yield Label("Analyzing block template...", id="glass-content", classes="glass-content")
 
     def refresh_data(self, *, force: bool = False) -> None:
         self._fetch_composition(force=force)

@@ -39,8 +39,8 @@ class BlockTemplatePanel(Static):
         self.border_title = "BLOCK TEMPLATE"
 
     def compose(self) -> ComposeResult:
-        yield Label("[t] refrescar", classes="template-hint")
-        yield Label("Cargando...", id="template-content", classes="template-content")
+        yield Label("[t] refresh", classes="template-hint")
+        yield Label("Loading...", id="template-content", classes="template-content")
 
     def refresh_data(self, *, force: bool = False) -> None:
         self._fetch_template(force=force)
@@ -60,7 +60,7 @@ class BlockTemplatePanel(Static):
 
     def _format(self, tmpl: dict) -> str:
         if not tmpl:
-            return "[yellow]Template no disponible[/]"
+            return "[yellow]Template unavailable[/]"
 
         height = tmpl.get("height", "?")
         txs = tmpl.get("transactions", [])
@@ -93,7 +93,7 @@ class BlockTemplatePanel(Static):
             lines.append(f"  {txid}  {rate:5.0f}  {tx.get('fee', 0)/1e8:.5f}")
 
         if not ranked:
-            lines.append("  (vacío)")
+            lines.append("  (empty)")
 
         return "\n".join(lines)
 

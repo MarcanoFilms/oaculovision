@@ -16,8 +16,8 @@ class BlockDetailModal(ModalScreen[None]):
     """Shows detailed analysis for a single block."""
 
     BINDINGS = [
-        Binding("escape", "dismiss", "Cerrar"),
-        Binding("c", "copy_hash", "Copiar hash"),
+        Binding("escape", "dismiss", "Close"),
+        Binding("c", "copy_hash", "Copy hash"),
     ]
 
     DEFAULT_CSS = """
@@ -101,20 +101,20 @@ class BlockDetailModal(ModalScreen[None]):
                 lines.append(f"    flags: {flags}")
                 lines.append(f"    signals: {signals}")
             if len(bad) > 25:
-                lines.append(f"  … y {len(bad) - 25} más")
+                lines.append(f"  … and {len(bad) - 25} more")
 
         lines.extend([
             "",
-            "[dim]c = copiar hash · Esc = cerrar[/]",
+            "[dim]c = copy hash · Esc = close[/]",
         ])
         return "\n".join(lines)
 
     def action_copy_hash(self) -> None:
         status = self.query_one("#copy-status", Label)
         if copy_to_clipboard(self.block.hash):
-            status.update("✓ Hash copiado al portapapeles")
+            status.update("✓ Hash copied to clipboard")
         else:
-            status.update("[yellow]No se pudo copiar (instala wl-copy/xclip)[/]")
+            status.update("[yellow]Could not copy (install wl-copy/xclip)[/]")
 
     def action_dismiss(self) -> None:
         self.dismiss()

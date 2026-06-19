@@ -89,7 +89,7 @@ def _is_coinjoin(tx: dict[str, Any]) -> bool:
         if v is not None:
             out_vals[v] = out_vals.get(v, 0) + 1
     if not in_vals and not out_vals:
-        # Sin prevout: heurística débil por conteo de I/O similar
+        # No prevout data: weak heuristic based on similar I/O counts
         return len(vin) >= 8 and len(vout) >= 8 and abs(len(vin) - len(vout)) <= 2
     unique = len(set(in_vals) | set(out_vals))
     total = len(vin) + len(vout)
@@ -130,7 +130,7 @@ def analyze_block_template(
     result.total_tx = len(txs)
 
     if not txs:
-        result.error = "Block template vacío"
+        result.error = "Block template is empty"
         return result
 
     for entry in txs:
@@ -167,7 +167,7 @@ def analyze_block_template(
             result.economic_count += 1
 
     if result.analyzed_tx == 0:
-        result.error = "No se pudieron decodificar transacciones del template"
+        result.error = "Could not decode transactions from the template"
     else:
         result.fill_pct = (result.analyzed_weight / result.weight_limit * 100) if result.weight_limit else 0
 

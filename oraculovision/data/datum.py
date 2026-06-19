@@ -30,12 +30,12 @@ class DatumStatus:
     source: str = ""
 
 
-SETUP_HINT = """DATUM no detectado. Para habilitar:
-  1. Instala datum_gateway (OCEAN-xyz/datum_gateway)
+SETUP_HINT = """DATUM not detected. To enable:
+  1. Install datum_gateway (OCEAN-xyz/datum_gateway)
   2. sudo systemctl enable --now datum
-  3. En bitcoin.conf: blocknotify=killall -USR1 datum_gateway
-  4. API en :7152, miners en stratum :23334
-  5. Define DATUM_API_URL=http://127.0.0.1:7152 si usas otro puerto"""
+  3. In bitcoin.conf: blocknotify=killall -USR1 datum_gateway
+  4. API on :7152, miners on stratum :23334
+  5. Set DATUM_API_URL=http://127.0.0.1:7152 if using another port"""
 
 
 def _find_config() -> dict:

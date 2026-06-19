@@ -1,30 +1,30 @@
 # OraculoVision
 
-Dashboard de terminal (TUI) para operadores soberanos que corren **Bitcoin Knots** con **BIP-110** activado y **DATUM** para mining propio.
+Terminal dashboard (TUI) for sovereign operators running **Bitcoin Knots** with **BIP-110** enabled and **DATUM** for solo mining.
 
-Filosofía: **Don't Trust, Verify**.
+Philosophy: **Don't Trust, Verify**.
 
-## Características
+## Features
 
-| Panel | Descripción |
+| Panel | Description |
 |-------|-------------|
-| **Node Status** | Sync, peers, mempool, UTXO set + crecimiento, alertas |
-| **BIP-110 Detector** | Spam score, status, miner tags, tabla navegable |
-| **Block Detail Modal** | Detalle completo por bloque (Enter) |
+| **Node Status** | Sync, peers, mempool, UTXO set + growth, alerts |
+| **BIP-110 Detector** | Spam score, status, miner tags, navigable table |
+| **Block Detail Modal** | Full per-block detail (Enter) |
 | **DATUM Mining** | Gateway, workers, hashrate, shares |
-| **Mempool Glass** | Composición del **Block Template real** (todas las txs GBT) |
-| **Block Template** | Resumen GBT compacto + top 5 fee rates |
-| **Live Metrics** | Gráficos mempool y peers |
+| **Mempool Glass** | **Real Block Template** composition (all GBT txs) |
+| **Block Template** | Compact GBT summary + top 5 fee rates |
+| **Live Metrics** | Mempool and peer charts |
 
-## Requisitos
+## Requirements
 
 - Python 3.11+
-- [Bitcoin Knots](https://bitcoinknots.org/) con RPC accesible vía `bitcoin-cli`
-- (Opcional) [DATUM Gateway](https://github.com/OCEAN-xyz/datum_gateway) para el panel de mining
+- [Bitcoin Knots](https://bitcoinknots.org/) with RPC available via `bitcoin-cli`
+- (Optional) [DATUM Gateway](https://github.com/OCEAN-xyz/datum_gateway) for the mining panel
 
-## Instalación
+## Installation
 
-### Desde el repositorio
+### From the repository
 
 ```bash
 git clone https://github.com/MarcanoFilms/oraculovision.git
@@ -34,102 +34,102 @@ source .venv/bin/activate
 pip install -e .
 ```
 
-### Configuración
+### Configuration
 
 ```bash
+mkdir -p ~/.config/oraculovision
 cp config.example.toml ~/.config/oraculovision/config.toml
-# Edita el archivo según tu entorno
-mkdir -p ~/.config/oraculovision   # si el directorio no existe
+# Edit the file for your environment
 ```
 
-También puedes colocar `config.toml` en la raíz del proyecto para desarrollo local.
+You can also place `config.toml` in the project root for local development.
 
-### Ejecución
+### Run
 
 ```bash
 oraculovision
-# o
+# or
 python main.py
 ```
 
-### Atajo global (opcional)
+### Global shortcut (optional)
 
 ```bash
 ./install-shortcut.sh
 ```
 
-Esto crea `~/.local/bin/oraculovision` apuntando al entorno virtual del proyecto.
+This creates `~/.local/bin/oraculovision` pointing at the project's virtual environment.
 
-## Atajos de teclado
+## Keyboard shortcuts
 
 ### Global
 
-| Tecla | Acción |
-|-------|--------|
-| `r` | Refrescar todos los paneles |
-| `t` | Refrescar Block Template + Mempool Glass |
-| `q` | Salir |
-| `?` | Pantalla de ayuda completa |
-| `Tab` | Cambiar foco entre paneles |
+| Key | Action |
+|-----|--------|
+| `r` | Refresh all panels |
+| `t` | Refresh Block Template + Mempool Glass |
+| `q` | Quit |
+| `?` | Full help screen |
+| `Tab` | Move focus between panels |
 
 ### BIP-110 Detector
 
-| Tecla | Acción |
-|-------|--------|
-| `↑` `↓` | Navegar tabla de bloques |
-| `Enter` | Abrir modal de detalle del bloque |
+| Key | Action |
+|-----|--------|
+| `↑` `↓` | Navigate block table |
+| `Enter` | Open block detail modal |
 
-### Modal de bloque
+### Block modal
 
-| Tecla | Acción |
-|-------|--------|
-| `c` | Copiar hash al portapapeles |
-| `Esc` | Cerrar |
+| Key | Action |
+|-----|--------|
+| `c` | Copy hash to clipboard |
+| `Esc` | Close |
 
-## Alertas visuales
+## Visual alerts
 
-- **Borde rojo** en Node Status — pocos peers
-- **Borde amarillo** en Node Status — mempool congestionado
-- **Borde rojo** en BIP-110 — bloque tip con alto spam
-- **Borde rojo** en Mempool Glass — >30% peso spam
-- **Banner superior** — resumen de alertas activas
+- **Red border** on Node Status — low peer count
+- **Yellow border** on Node Status — congested mempool
+- **Red border** on BIP-110 — high-spam tip block
+- **Red border** on Mempool Glass — >30% spam weight
+- **Top banner** — summary of active alerts
 
-## Configuración
+## Configuration
 
-OraculoVision busca configuración en este orden:
+OraculoVision looks for configuration in this order:
 
-1. Variable de entorno `ORACULOVISION_CONFIG`
+1. `ORACULOVISION_CONFIG` environment variable
 2. `~/.config/oraculovision/config.toml`
-3. `config.toml` en la raíz del proyecto
+3. `config.toml` in the project root
 
-Consulta `config.example.toml` para todas las opciones disponibles.
+See `config.example.toml` for all available options.
 
-### Variables de entorno
+### Environment variables
 
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `BITCOIN_CLI` | Ruta a `bitcoin-cli` |
-| `BITCOIN_DATADIR` | Datadir del nodo |
-| `DATUM_API_URL` | API DATUM (default `http://127.0.0.1:7152`) |
-| `DATUM_CONFIG` | Ruta al JSON de configuración de DATUM |
-| `ORACULOVISION_CONFIG` | Ruta al `config.toml` |
+| `BITCOIN_CLI` | Path to `bitcoin-cli` |
+| `BITCOIN_DATADIR` | Node data directory |
+| `DATUM_API_URL` | DATUM API (default `http://127.0.0.1:7152`) |
+| `DATUM_CONFIG` | Path to DATUM gateway JSON config |
+| `ORACULOVISION_CONFIG` | Path to `config.toml` |
 
 ## Mempool Glass
 
-Analiza el **Block Template actual** (`getblocktemplate`) — las transacciones que tu nodo Knots+BIP-110 incluiría en el próximo bloque. No usa muestra del mempool.
+Analyzes the **current Block Template** (`getblocktemplate`) — the transactions your Knots+BIP-110 node would include in the next block. It does not sample the mempool.
 
-Categorías:
+Categories:
 
-- **Economic / Clean** — sin señales spam
-- **Consolidations** — muchas entradas, pocas salidas
-- **Coinjoins** — patrones coinjoin
-- **Spam / Inscriptions** — inscriptions, witness grande, OP_RETURN, violaciones BIP-110
+- **Economic / Clean** — no spam signals
+- **Consolidations** — many inputs, few outputs
+- **Coinjoins** — coinjoin patterns
+- **Spam / Inscriptions** — inscriptions, large witness, OP_RETURN, BIP-110 violations
 
-Muestra: `Basado en Block Template #HEIGHT · N txs · X% peso máximo`
+Displays: `Based on Block Template #HEIGHT · N txs · X% max weight`
 
 ## Block Template
 
-Panel compacto con resumen GBT (height, txs, weight, coinbase, fees) y **top 5** transacciones por fee rate. Refrescar con `t`.
+Compact GBT summary (height, txs, weight, coinbase, fees) and **top 5** transactions by fee rate. Press `t` to refresh.
 
 ## DATUM
 
@@ -137,7 +137,7 @@ Panel compacto con resumen GBT (height, txs, weight, coinbase, fees) y **top 5**
 sudo systemctl enable --now datum
 ```
 
-En `bitcoin.conf`:
+In `bitcoin.conf`:
 
 ```
 blocknotify=killall -USR1 datum_gateway
@@ -149,35 +149,35 @@ blocknotify=killall -USR1 datum_gateway
 tmux new -s oraculo 'oraculovision'
 ```
 
-## Estructura del proyecto
+## Project structure
 
 ```
 oraculovision/
-├── main.py                 # Punto de entrada
-├── pyproject.toml          # Metadatos e instalación
-├── config.example.toml     # Configuración de ejemplo
-├── requirements.txt        # Dependencias (referencia)
-├── install-shortcut.sh     # Script de atajo global
-└── oraculovision/          # Paquete Python
-    ├── app.py              # Aplicación Textual principal
-    ├── config.py           # Cargador de configuración
+├── main.py                 # Entry point
+├── pyproject.toml          # Package metadata and install
+├── config.example.toml     # Example configuration
+├── requirements.txt        # Dependencies (reference)
+├── install-shortcut.sh     # Global shortcut script
+└── oraculovision/          # Python package
+    ├── app.py              # Main Textual application
+    ├── config.py           # Configuration loader
     ├── analysis/           # BIP-110, spam score, mempool
-    ├── data/               # bitcoin-cli y DATUM
-    ├── screens/            # Modales y ayuda
+    ├── data/               # bitcoin-cli and DATUM
+    ├── screens/            # Modals and help
     ├── services/           # Block template service
-    ├── utils/              # Utilidades (clipboard)
-    └── widgets/            # Paneles del dashboard
+    ├── utils/              # Utilities (clipboard)
+    └── widgets/            # Dashboard panels
 ```
 
 ## Troubleshooting
 
-| Problema | Solución |
-|----------|----------|
-| `bitcoin-cli no encontrado` | Instala Knots o define `BITCOIN_CLI` |
-| UTXO set lento | `gettxoutsetinfo` tarda ~2min; se cachea 30min |
-| Mempool Glass lento | Normal con ~1000 txs GBT (~2s); usa `t` solo cuando necesites |
-| Copiar hash falla | Instala `wl-copy` o `xclip` |
+| Problem | Solution |
+|---------|----------|
+| `bitcoin-cli not found` | Install Knots or set `BITCOIN_CLI` |
+| Slow UTXO set | `gettxoutsetinfo` takes ~2 min; cached for 30 min |
+| Slow Mempool Glass | Normal with ~1000 GBT txs (~2s); use `t` only when needed |
+| Copy hash fails | Install `wl-copy` or `xclip` |
 
-## Licencia
+## License
 
-MIT — ver [LICENSE](LICENSE) si está incluido en el repositorio.
+MIT — see [LICENSE](LICENSE).

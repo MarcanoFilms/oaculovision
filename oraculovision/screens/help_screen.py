@@ -9,38 +9,38 @@ from textual.screen import ModalScreen
 from textual.widgets import Footer, Header, Static
 
 HELP_TEXT = """
-[bold #ffd700]ORACULOVISION — AYUDA[/]
+[bold #ffd700]ORACULOVISION — HELP[/]
 
-[bold]Navegación global[/]
-  [yellow]r[/]     Refrescar todos los paneles
-  [yellow]t[/]     Refrescar Block Template + Mempool Glass
-  [yellow]q[/]     Salir del dashboard
-  [yellow]?[/]     Abrir/cerrar esta ayuda
-  [yellow]Tab[/]   Cambiar foco entre paneles
+[bold]Global navigation[/]
+  [yellow]r[/]     Refresh all panels
+  [yellow]t[/]     Refresh Block Template + Mempool Glass
+  [yellow]q[/]     Quit the dashboard
+  [yellow]?[/]     Open/close this help screen
+  [yellow]Tab[/]   Move focus between panels
 
 [bold]BIP-110 Detector[/]
-  [yellow]↑ ↓[/]   Navegar tabla de bloques
-  [yellow]Enter[/] Abrir detalle del bloque seleccionado
+  [yellow]↑ ↓[/]   Navigate the block table
+  [yellow]Enter[/] Open detail for the selected block
 
-[bold]Modal de bloque[/]
-  [yellow]c[/]     Copiar hash del bloque al portapapeles
-  [yellow]Esc[/]   Cerrar modal
+[bold]Block modal[/]
+  [yellow]c[/]     Copy block hash to clipboard
+  [yellow]Esc[/]   Close modal
 
-[bold]Paneles[/]
-  [cyan]Node Status[/]       Sync, peers, mempool, UTXO set, alertas
-  [cyan]BIP-110 Detector[/]  Spam score, violaciones, miner tags
+[bold]Panels[/]
+  [cyan]Node Status[/]       Sync, peers, mempool, UTXO set, alerts
+  [cyan]BIP-110 Detector[/]  Spam score, violations, miner tags
   [cyan]DATUM Mining[/]      Gateway, workers, hashrate, shares
-  [cyan]Mempool Glass[/]     Composición del Block Template real (GBT)
-  [cyan]Block Template[/]    Resumen GBT compacto + top 5 fees
-  [cyan]Live Metrics[/]      Gráficos mempool y peers
+  [cyan]Mempool Glass[/]     Real Block Template composition (GBT)
+  [cyan]Block Template[/]    Compact GBT summary + top 5 fees
+  [cyan]Live Metrics[/]      Mempool and peer charts
 
-[bold]Alertas visuales[/]
-  Borde [red]rojo[/]    — pocos peers o bloque spam reciente
-  Borde [yellow]amarillo[/] — mempool congestionado
+[bold]Visual alerts[/]
+  [red]Red[/] border       — low peers or recent spam block
+  [yellow]Yellow[/] border — congested mempool
 
-[bold]Configuración[/]
-  config.toml en el proyecto o ~/.config/oraculovision/config.toml
-  Variable ORACULOVISION_CONFIG para ruta personalizada
+[bold]Configuration[/]
+  config.toml in the project or ~/.config/oraculovision/config.toml
+  ORACULOVISION_CONFIG for a custom path
 
 [dim]Don't Trust, Verify — BIP-110 + Knots + DATUM[/]
 """
@@ -50,9 +50,9 @@ class HelpScreen(ModalScreen):
     """Modal help screen."""
 
     BINDINGS = [
-        Binding("escape", "dismiss", "Cerrar"),
-        Binding("question_mark", "dismiss", "Cerrar"),
-        Binding("q", "dismiss", "Cerrar"),
+        Binding("escape", "dismiss", "Close"),
+        Binding("question_mark", "dismiss", "Close"),
+        Binding("q", "dismiss", "Close"),
     ]
 
     DEFAULT_CSS = """

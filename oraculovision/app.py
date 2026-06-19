@@ -119,10 +119,10 @@ class OraculoVisionApp(App):
             msgs.append(node.alert_message)
         if bip.alert_spam_block and bip._tip:
             msgs.append(
-                f"⚠ Bloque tip sucio: spam {bip._tip.spam_score}/100 ({bip._tip.miner_tag[:24]})"
+                f"⚠ Dirty tip block: spam {bip._tip.spam_score}/100 ({bip._tip.miner_tag[:24]})"
             )
         if glass.spam_pct > 30:
-            msgs.append(f"⚠ Template: {glass.spam_pct:.0f}% peso spam")
+            msgs.append(f"⚠ Template: {glass.spam_pct:.0f}% spam weight")
 
         if msgs:
             alert.update("[bold red]" + "  ·  ".join(msgs) + "[/]")
