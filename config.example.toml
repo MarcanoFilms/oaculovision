@@ -1,0 +1,39 @@
+# OraculoVision — example configuration
+#
+# Copy this file to one of:
+#   - config.toml              (project root, for local development)
+#   - ~/.config/oraculovision/config.toml   (recommended for production)
+#
+# Or set ORACULOVISION_CONFIG=/path/to/config.toml
+
+[refresh]
+# How often all panels auto-refresh (seconds).
+interval_seconds = 30
+
+[alerts]
+# Minimum peer count before Node Status shows a red border.
+min_peers = 8
+
+# Mempool size (MB) that triggers a congestion warning.
+mempool_congested_mb = 50.0
+
+# Transaction count in mempool that triggers a congestion warning.
+mempool_congested_tx = 5000
+
+# Spam score threshold (0–100) for BIP-110 tip-block alert.
+spam_block_score = 45
+
+# Mempool Glass uses the full Block Template from your node (getblocktemplate).
+# It analyzes every transaction the node would include — not a mempool sample.
+
+[bitcoin]
+# Path to bitcoin-cli. Leave as "bitcoin-cli" if it is on your PATH,
+# or set an absolute path (e.g. /usr/local/bin/bitcoin-cli).
+cli_path = "bitcoin-cli"
+
+# Bitcoin data directory. Leave empty to use the node default,
+# or set explicitly (e.g. ~/.bitcoin).
+datadir = ""
+
+# Timeout (seconds) for gettxoutsetinfo. This RPC can take ~2 minutes.
+utxo_timeout = 120.0
