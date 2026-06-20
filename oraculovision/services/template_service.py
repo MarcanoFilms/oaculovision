@@ -26,7 +26,7 @@ class TemplateService:
     def __init__(self, cli: BitcoinCLI) -> None:
         self.cli = cli
         self._snapshot: TemplateSnapshot | None = None
-        self._cache_ttl = 3.0
+        self._cache_ttl = 30.0
 
     def fetch(self, *, force: bool = False) -> TemplateSnapshot:
         now = time.time()

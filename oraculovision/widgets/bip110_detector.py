@@ -63,6 +63,7 @@ class Bip110Detector(Static):
         self._blocks: list[BlockAnalysis] = []
         self._blocks_by_height: dict[str, BlockAnalysis] = {}
         self._tip: BlockAnalysis | None = None
+        self._last_tip_height: int | None = None
         self.alert_spam_block: bool = False
 
     def compose(self) -> ComposeResult:
@@ -80,6 +81,14 @@ class Bip110Detector(Static):
         self.refresh_data()
 
     def refresh_data(self) -> None:
+        try:
+            tip_height = self.cli.get_block_count()
+        except BitcoinCLIError:
+            self._fetch_blocks()
+            return
+        if self._last_tip_height == tip_height and self._blocks:
+            return
+        self._last_tip_height = tip_height
         self._fetch_blocks()
 
     def action_open_block_detail(self) -> None:

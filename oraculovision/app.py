@@ -12,6 +12,7 @@ from textual.widgets import Footer, Header, Label
 from oraculovision.config import AppConfig, load_config
 from oraculovision.data.bitcoin import BitcoinCLI
 from oraculovision.screens.help_screen import HelpScreen
+from oraculovision.screens.ocean_address_screen import OceanAddressScreen
 from oraculovision.services.template_service import TemplateService
 from oraculovision.widgets.bip110_detector import Bip110Detector
 from oraculovision.widgets.block_template import BlockTemplatePanel
@@ -32,6 +33,8 @@ class OraculoVisionApp(App):
     BINDINGS = [
         Binding("r", "refresh", "Refresh", show=True),
         Binding("t", "refresh_template", "Template", show=True),
+        Binding("o", "ocean_address", "Ocean", show=True),
+        Binding("u", "refresh_utxo", "UTXO", show=True),
         Binding("q", "quit", "Quit", show=True),
         Binding("question_mark", "show_help", "Help", show=True),
     ]
@@ -62,7 +65,7 @@ class OraculoVisionApp(App):
                         id="bip110", cli=self.cli, config=self.config,
                     )
                 with VerticalScroll(id="right-col"):
-                    yield DatumMining(id="datum")
+                    yield DatumMining(id="datum", config=self.config)
                     yield MempoolGlass(
                         id="mempool-glass",
                         template_service=self.template_service,
@@ -82,12 +85,11 @@ class OraculoVisionApp(App):
         self.action_refresh()
 
     def action_refresh(self) -> None:
-        self.template_service.invalidate()
         self.query_one("#node-status", NodeStatus).refresh_data()
         self.query_one("#bip110", Bip110Detector).refresh_data()
         self.query_one("#datum", DatumMining).refresh_data()
-        self.query_one("#mempool-glass", MempoolGlass).refresh_data(force=True)
-        self.query_one("#block-template", BlockTemplatePanel).refresh_data(force=True)
+        self.query_one("#mempool-glass", MempoolGlass).refresh_data(force=False)
+        self.query_one("#block-template", BlockTemplatePanel).refresh_data(force=False)
         try:
             self.query_one("#charts", LiveCharts).refresh_data()
         except Exception:
@@ -105,8 +107,12 @@ class OraculoVisionApp(App):
     def _update_tagline(self) -> None:
         utc = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         self.query_one("#tagline", Label).update(
-            f"ORACULOVISION  ·  {utc}  ·  [r] refresh  [t] template  [?] help"
+            f"ORACULOVISION  ·  {utc}  ·  [r] refresh  [t] template  [u] utxo  [o] ocean  [?] help"
         )
+
+    def action_refresh_utxo(self) -> None:
+        """Refresh UTXO set stats (slow RPC, background thread)."""
+        self.query_one("#node-status", NodeStatus).refresh_utxo()
 
     def _update_global_alerts(self) -> None:
         alert = self.query_one("#global-alert", Label)
@@ -131,6 +137,21 @@ class OraculoVisionApp(App):
 
     def action_show_help(self) -> None:
         self.push_screen(HelpScreen())
+
+    def action_ocean_address(self) -> None:
+        """Open modal to set or change the Ocean payout address."""
+        datum = self.query_one("#datum", DatumMining)
+        self.push_screen(
+            OceanAddressScreen(datum.active_ocean_address),
+            self._on_ocean_address_set,
+        )
+
+    def _on_ocean_address_set(self, address: str | None) -> None:
+        if address is None:
+            return
+        datum = self.query_one("#datum", DatumMining)
+        datum.set_ocean_address(address)
+        datum.refresh_data()
 
 
 def run() -> None:

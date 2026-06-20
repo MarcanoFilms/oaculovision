@@ -46,11 +46,17 @@ class BitcoinConfig:
 
 
 @dataclass
+class OceanConfig:
+    address: str = ""
+
+
+@dataclass
 class AppConfig:
     refresh: RefreshConfig = field(default_factory=RefreshConfig)
     alerts: AlertsConfig = field(default_factory=AlertsConfig)
     mempool_glass: MempoolGlassConfig = field(default_factory=MempoolGlassConfig)
     bitcoin: BitcoinConfig = field(default_factory=BitcoinConfig)
+    ocean: OceanConfig = field(default_factory=OceanConfig)
 
 
 def load_config() -> AppConfig:
@@ -85,5 +91,9 @@ def load_config() -> AppConfig:
             cli_path=str(btc.get("cli_path", "bitcoin-cli")),
             datadir=str(btc.get("datadir", "")),
             utxo_timeout=float(btc.get("utxo_timeout", 120)),
+        )
+    if ocean := data.get("ocean"):
+        cfg.ocean = OceanConfig(
+            address=str(ocean.get("address", "")).strip(),
         )
     return cfg

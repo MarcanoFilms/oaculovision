@@ -12,8 +12,10 @@ HELP_TEXT = """
 [bold #ffd700]ORACULOVISION — HELP[/]
 
 [bold]Global navigation[/]
-  [yellow]r[/]     Refresh all panels
-  [yellow]t[/]     Refresh Block Template + Mempool Glass
+  [yellow]r[/]     Refresh all panels (light RPCs + cached template)
+  [yellow]t[/]     Refresh Block Template + Mempool Glass (full GBT)
+  [yellow]u[/]     Refresh UTXO set stats (slow RPC, ~2 min, background)
+  [yellow]o[/]     Enter or change Ocean payout address
   [yellow]q[/]     Quit the dashboard
   [yellow]?[/]     Open/close this help screen
   [yellow]Tab[/]   Move focus between panels
@@ -26,10 +28,14 @@ HELP_TEXT = """
   [yellow]c[/]     Copy block hash to clipboard
   [yellow]Esc[/]   Close modal
 
+[bold]Ocean address modal[/]
+  [yellow]Enter[/]  Apply address (empty clears session address)
+  [yellow]Esc[/]    Cancel without changes
+
 [bold]Panels[/]
   [cyan]Node Status[/]       Sync, peers, mempool, UTXO set, alerts
   [cyan]BIP-110 Detector[/]  Spam score, violations, miner tags
-  [cyan]DATUM Mining[/]      Gateway, workers, hashrate, shares
+  [cyan]DATUM Mining[/]      Gateway, workers, hashrate, Ocean stats
   [cyan]Mempool Glass[/]     Real Block Template composition (GBT)
   [cyan]Block Template[/]    Compact GBT summary + top 5 fees
   [cyan]Live Metrics[/]      Mempool and peer charts
@@ -37,6 +43,11 @@ HELP_TEXT = """
 [bold]Visual alerts[/]
   [red]Red[/] border       — low peers or recent spam block
   [yellow]Yellow[/] border — congested mempool
+
+[bold]Performance notes[/]
+  Auto-refresh skips slow RPCs: UTXO set ([yellow]u[/] only),
+  Block Template (use [yellow]t[/] or 30s cache), BIP-110 blocks
+  (only when chain tip changes), Ocean blocks-found (5 min cache).
 
 [bold]Configuration[/]
   config.toml in the project or ~/.config/oraculovision/config.toml

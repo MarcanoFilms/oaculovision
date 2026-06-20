@@ -59,7 +59,7 @@ Footer {
 
 #datum {
     height: auto;
-    max-height: 16;
+    max-height: 32;
 }
 
 #mempool-glass {

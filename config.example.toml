@@ -36,4 +36,11 @@ cli_path = "bitcoin-cli"
 datadir = ""
 
 # Timeout (seconds) for gettxoutsetinfo. This RPC can take ~2 minutes.
+# UTXO stats are not fetched on auto-refresh — press [u] in the dashboard.
 utxo_timeout = 120.0
+
+[ocean]
+# Default Bitcoin payout address on Ocean (bc1...).
+# Optional: press [o] in the dashboard to enter or change the address
+# for the current session (session override takes priority over this value).
+address = ""
