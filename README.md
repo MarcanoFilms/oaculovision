@@ -65,17 +65,44 @@ This creates `~/.local/bin/oraculovision` pointing at the project's virtual envi
 
 ## Keyboard shortcuts
 
+### Screen navigation (v2)
+
+| Key | Screen |
+|-----|--------|
+| `1` | Dashboard — sovereignty brief, metrics, expert panels |
+| `2` | Policies — Knots policies + simulation |
+| `3` | Mempool Glass — full block template analysis |
+| `4` | Block Explorer — search blocks by height/hash |
+| `5` | Tx & Address Inspector — flows, fees, UTXO balance |
+| `6` | Spam & Health — chain health trends |
+| `7` | Mining — DATUM + Ocean |
+| `8` | Node Control — peers/bans (gated) |
+
 ### Global
 
 | Key | Action |
 |-----|--------|
-| `r` | Refresh all panels (light RPCs, cached template) |
+| `r` | Refresh current screen |
 | `t` | Refresh Block Template + Mempool Glass (full GBT) |
 | `u` | Refresh UTXO set stats (slow RPC, ~2 min, background) |
+| `e` | Export JSON/CSV audit trail (Health, Explorer, Tx Inspector) |
+| `p` | Cycle node profile (local / remote RPC / SSH) |
 | `o` | Enter or change Ocean payout address |
+| `/` | Focus search (Explorer, Tx Inspector, Control) |
 | `q` | Quit |
 | `?` | Full help screen |
-| `Tab` | Move focus between panels |
+
+### Tx & Address Inspector
+
+| Key | Action |
+|-----|--------|
+| `Enter` | Inspect txid (64 hex) or address (`bc1…`, `1…`, `3…`) |
+| `a` | Open UTXO balance for address from loaded transaction |
+| `c` | Copy txid or address to clipboard |
+
+**Tx view** shows inputs/outputs, BTC amounts, fees, senders and recipients.  
+**Address view** shows confirmed UTXO balance via `scantxoutset` on your node.  
+On **pruned nodes**, inspect txs from Block Explorer (`i` on flagged tx) for full block-cache context.
 
 ### BIP-110 Detector
 <img width="968" height="599" alt="image" src="https://github.com/user-attachments/assets/509b9eac-7ccf-4b8c-8cb5-cb1c858b1625" />

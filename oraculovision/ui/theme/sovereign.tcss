@@ -1,0 +1,312 @@
+/* OracleVision sovereign theme — PyBlock-aligned cyberpunk terminal */
+
+$bg-deep: rgb(10, 10, 12);
+$bg-panel: rgb(18, 18, 22);
+$bg-elevated: rgb(26, 26, 32);
+
+$accent-orange: rgb(255, 102, 0);
+$accent-gold: rgb(255, 215, 0);
+$accent-cyan: rgb(0, 220, 255);
+$accent-green: rgb(61, 214, 140);
+$accent-yellow: rgb(255, 200, 0);
+$accent-red: rgb(255, 80, 80);
+
+$border-dim: rgb(45, 45, 55);
+$text-primary: rgb(224, 224, 224);
+$text-dim: rgb(120, 120, 130);
+
+/* --- Global chrome --- */
+Screen {
+    background: $bg-deep;
+}
+
+Header {
+    background: $bg-elevated;
+    color: $accent-orange;
+    text-style: bold;
+}
+
+Footer {
+    background: $bg-elevated;
+    color: $text-dim;
+}
+
+DataTable > .datatable--header {
+    background: $bg-elevated;
+    color: $accent-gold;
+}
+
+DataTable > .datatable--cursor {
+    background: rgb(40, 40, 50);
+    color: $accent-cyan;
+}
+
+.status-clean {
+    color: $accent-green;
+}
+
+.status-suspicious {
+    color: $accent-yellow;
+}
+
+.status-violation {
+    color: $accent-red;
+    text-style: bold;
+}
+
+/* --- Layout --- */
+#sovereign-status {
+    height: 1;
+}
+
+#sovereign-shell {
+    height: 1fr;
+    padding: 0 1;
+}
+
+#sovereign-layout {
+    height: 1fr;
+}
+
+#screen-switcher {
+    width: 1fr;
+    height: 100%;
+}
+
+#tagline {
+    color: $accent-gold;
+    text-align: center;
+    padding: 0 1;
+    text-style: bold;
+}
+
+#global-alert {
+    color: $accent-red;
+    text-align: center;
+    padding: 0 1;
+    height: auto;
+    min-height: 1;
+}
+
+#dashboard {
+    height: 1fr;
+}
+
+DashboardScreen #metric-row {
+    height: auto;
+}
+
+DashboardScreen #sov-brief {
+    max-height: 12;
+}
+
+#left-col {
+    width: 52%;
+    height: 1fr;
+}
+
+#right-col {
+    width: 48%;
+    height: 1fr;
+    padding-left: 1;
+}
+
+#node-status {
+    height: auto;
+    max-height: 14;
+}
+
+#bip110 {
+    height: 1fr;
+    margin-top: 1;
+}
+
+#datum {
+    height: auto;
+    max-height: 32;
+}
+
+#mempool-glass {
+    height: auto;
+    margin-top: 1;
+}
+
+#block-template {
+    height: auto;
+    max-height: 10;
+    margin-top: 1;
+}
+
+#charts {
+    height: 14;
+    min-height: 12;
+    margin-top: 1;
+}
+
+.hidden {
+    display: none;
+}
+
+NodeStatus.alert-peers {
+    border: solid $accent-red;
+}
+
+NodeStatus.alert-mempool {
+    border: solid $accent-yellow;
+}
+
+Bip110Detector.alert-spam-block {
+    border: solid $accent-red;
+}
+
+MempoolGlass.alert-spam {
+    border: solid $accent-red;
+}
+
+MempoolGlass.alert-mempool {
+    border: solid $accent-yellow;
+}
+
+/* --- Sovereignty status bar --- */
+SovereignStatusBar {
+    dock: top;
+    height: 1;
+    background: rgb(20, 20, 24);
+    color: $text-primary;
+    padding: 0 1;
+}
+
+SovereignStatusBar.-alert {
+    background: rgb(30, 20, 20);
+}
+
+/* --- Panels --- */
+SovereignPanel {
+    height: auto;
+    background: $bg-panel;
+    border: solid $border-dim;
+    padding: 1 2;
+}
+
+SovereignPanel.-warn {
+    border: solid $accent-yellow;
+}
+
+SovereignPanel.-danger {
+    border: solid $accent-red;
+}
+
+SovereignPanel.-ok {
+    border: solid $accent-green;
+}
+
+SovereignPanel .sov-panel-title {
+    color: $accent-gold;
+    text-style: bold;
+    padding-bottom: 1;
+}
+
+/* --- Metric cards --- */
+MetricCard {
+    height: auto;
+    background: $bg-panel;
+    border: solid $border-dim;
+    padding: 1 2;
+    width: 1fr;
+}
+
+MetricCard .metric-label {
+    color: $text-dim;
+    text-style: bold;
+}
+
+MetricCard .metric-value {
+    color: $accent-cyan;
+    text-style: bold;
+}
+
+MetricCard .metric-sub {
+    color: $text-dim;
+}
+
+MetricCard.-warn .metric-value {
+    color: $accent-yellow;
+}
+
+MetricCard.-danger .metric-value {
+    color: $accent-red;
+}
+
+MetricCard.-ok .metric-value {
+    color: $accent-green;
+}
+
+/* --- Explain box --- */
+ExplainBox {
+    height: auto;
+    background: rgb(14, 18, 22);
+    border-left: thick $accent-cyan;
+    padding: 1 2;
+    color: $text-dim;
+}
+
+ExplainBox .explain-title {
+    color: $accent-cyan;
+    text-style: bold;
+    padding-bottom: 1;
+}
+
+/* --- Sidebar navigation --- */
+Sidebar {
+    width: 26;
+    height: 100%;
+    border-right: solid $border-dim;
+    background: rgb(14, 14, 18);
+    padding: 1 0;
+}
+
+Sidebar .sov-nav-brand {
+    color: $accent-orange;
+    text-style: bold;
+    text-align: center;
+    padding: 0 1 1 1;
+}
+
+Sidebar .sov-nav-tier {
+    color: $accent-cyan;
+    text-style: bold;
+    padding: 1 1 0 1;
+}
+
+Sidebar .sov-nav-hint {
+    color: $text-dim;
+    text-align: center;
+    padding: 1 1 0 1;
+}
+
+Sidebar ListView {
+    height: auto;
+    background: transparent;
+    max-height: 1fr;
+}
+
+Sidebar ListItem {
+    padding: 0 1;
+}
+
+Sidebar ListItem.-active {
+    background: rgb(30, 24, 8);
+    color: $accent-gold;
+    text-style: bold;
+}
+
+/* --- Control confirm modal --- */
+ConfirmModal #confirm-dialog {
+    border: solid $accent-red;
+    background: $bg-panel;
+}
+
+ConfirmModal .confirm-title {
+    color: $accent-red;
+    text-style: bold;
+}

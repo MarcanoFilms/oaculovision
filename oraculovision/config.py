@@ -7,6 +7,8 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from oraculovision.node.profiles import NodeProfile, load_profiles
+
 
 def _config_paths() -> list[Path]:
     env = os.environ.get("ORACULOVISION_CONFIG")
@@ -43,11 +45,60 @@ class BitcoinConfig:
     cli_path: str = "bitcoin-cli"
     datadir: str = ""
     utxo_timeout: float = 120.0
+    active_profile: str = "local"
 
 
 @dataclass
 class OceanConfig:
     address: str = ""
+
+
+@dataclass
+class ControlConfig:
+    """Node control safety settings."""
+
+    read_only: bool = True
+
+
+@dataclass
+class ChainHealthConfig:
+    """Spam & chain health scan settings."""
+
+    scan_blocks: int = 48
+
+
+@dataclass
+class BlockIndexConfig:
+    """Persistent block analysis cache settings."""
+
+    enabled: bool = True
+    path: str = ""
+    max_entries: int = 5000
+
+
+@dataclass
+class DetectorsConfig:
+    """Enabled transaction detector plugins."""
+
+    enabled: list[str] = field(default_factory=lambda: ["builtin"])
+
+
+@dataclass
+class AddressConfig:
+    """Address inspector settings."""
+
+    scantxoutset_timeout: float = 90.0
+    max_vin_lookups: int = 4
+    mempool_scan_limit: int = 30
+
+
+@dataclass
+class ExportConfig:
+    """Audit export settings."""
+
+    directory: str = ""
+    json: bool = True
+    csv: bool = True
 
 
 @dataclass
@@ -57,6 +108,36 @@ class AppConfig:
     mempool_glass: MempoolGlassConfig = field(default_factory=MempoolGlassConfig)
     bitcoin: BitcoinConfig = field(default_factory=BitcoinConfig)
     ocean: OceanConfig = field(default_factory=OceanConfig)
+    control: ControlConfig = field(default_factory=ControlConfig)
+    chain_health: ChainHealthConfig = field(default_factory=ChainHealthConfig)
+    block_index: BlockIndexConfig = field(default_factory=BlockIndexConfig)
+    export: ExportConfig = field(default_factory=ExportConfig)
+    address: AddressConfig = field(default_factory=AddressConfig)
+    detectors: DetectorsConfig = field(default_factory=DetectorsConfig)
+    profiles: dict[str, NodeProfile] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if not self.profiles:
+            self.profiles = {
+                "local": NodeProfile(
+                    name="local",
+                    cli_path=self.bitcoin.cli_path,
+                    datadir=self.bitcoin.datadir,
+                ),
+            }
+        elif self.bitcoin.active_profile not in self.profiles:
+            self.bitcoin.active_profile = next(iter(self.profiles))
+
+
+def config_source() -> tuple[Path | None, float]:
+    """Return the active config file path and its modification time."""
+    for path in _config_paths():
+        if path.is_file():
+            try:
+                return path, path.stat().st_mtime
+            except OSError:
+                return path, 0.0
+    return None, 0.0
 
 
 def load_config() -> AppConfig:
@@ -91,9 +172,46 @@ def load_config() -> AppConfig:
             cli_path=str(btc.get("cli_path", "bitcoin-cli")),
             datadir=str(btc.get("datadir", "")),
             utxo_timeout=float(btc.get("utxo_timeout", 120)),
+            active_profile=str(btc.get("active_profile", "local")),
         )
     if ocean := data.get("ocean"):
         cfg.ocean = OceanConfig(
             address=str(ocean.get("address", "")).strip(),
         )
+    if control := data.get("control"):
+        cfg.control = ControlConfig(
+            read_only=bool(control.get("read_only", True)),
+        )
+    if health := data.get("chain_health"):
+        cfg.chain_health = ChainHealthConfig(
+            scan_blocks=int(health.get("scan_blocks", 48)),
+        )
+    if block_index := data.get("block_index"):
+        cfg.block_index = BlockIndexConfig(
+            enabled=bool(block_index.get("enabled", True)),
+            path=str(block_index.get("path", "")),
+            max_entries=int(block_index.get("max_entries", 5000)),
+        )
+    if export := data.get("export"):
+        cfg.export = ExportConfig(
+            directory=str(export.get("directory", "")),
+            json=bool(export.get("json", True)),
+            csv=bool(export.get("csv", True)),
+        )
+    if address := data.get("address"):
+        cfg.address = AddressConfig(
+            scantxoutset_timeout=float(address.get("scantxoutset_timeout", 90)),
+            max_vin_lookups=int(address.get("max_vin_lookups", 4)),
+            mempool_scan_limit=int(address.get("mempool_scan_limit", 30)),
+        )
+    if detectors := data.get("detectors"):
+        enabled = detectors.get("enabled", ["builtin"])
+        if isinstance(enabled, list):
+            cfg.detectors = DetectorsConfig(
+                enabled=[str(name) for name in enabled],
+            )
+
+    cfg.profiles = load_profiles(data)
+    cfg.__post_init__()
+
     return cfg

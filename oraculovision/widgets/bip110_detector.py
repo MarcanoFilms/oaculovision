@@ -8,10 +8,12 @@ from textual.binding import Binding
 from textual.containers import Vertical
 from textual.widgets import DataTable, Label, Static
 
-from oraculovision.analysis.bip110 import BlockAnalysis, analyze_block
+from oraculovision.analysis.bip110 import BlockAnalysis
 from oraculovision.config import AppConfig
 from oraculovision.data.bitcoin import BitcoinCLI, BitcoinCLIError
+from oraculovision.services.block_service import BlockQueryError, BlockService
 from oraculovision.screens.block_detail_modal import BlockDetailModal
+from oraculovision.utils.markup import safe_markup_text
 
 _STATUS_STYLE = {
     "CLEAN": "green",
@@ -53,11 +55,13 @@ class Bip110Detector(Static):
         self,
         cli: BitcoinCLI | None = None,
         config: AppConfig | None = None,
+        block_service: BlockService | None = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.cli = cli or BitcoinCLI()
         self.config = config or AppConfig()
+        self.block_service = block_service
         self.border_title = "BIP-110 DETECTOR"
         self._cache: dict[str, BlockAnalysis] = {}
         self._blocks: list[BlockAnalysis] = []
@@ -110,21 +114,28 @@ class Bip110Detector(Static):
     @work(thread=True, exclusive=True)
     def _fetch_blocks(self) -> None:
         try:
-            tip_height = self.cli.get_block_count()
-            analyses: list[BlockAnalysis] = []
-            for h in range(tip_height, max(tip_height - RECENT_BLOCKS, -1), -1):
-                block_hash = self.cli.get_block_hash(h)
-                if block_hash in self._cache:
-                    analyses.append(self._cache[block_hash])
-                    continue
-                block = self.cli.get_block(block_hash, 2)
-                analysis = analyze_block(block)
-                self._cache[block_hash] = analysis
-                analyses.append(analysis)
+            if self.block_service is not None:
+                analyses = self.block_service.fetch_recent(RECENT_BLOCKS)
+                for block in analyses:
+                    self._cache[block.hash] = block
+            else:
+                from oraculovision.analysis.bip110 import analyze_block
+
+                tip_height = self.cli.get_block_count()
+                analyses = []
+                for h in range(tip_height, max(tip_height - RECENT_BLOCKS, -1), -1):
+                    block_hash = self.cli.get_block_hash(h)
+                    if block_hash in self._cache:
+                        analyses.append(self._cache[block_hash])
+                        continue
+                    block = self.cli.get_block(block_hash, 2)
+                    analysis = analyze_block(block)
+                    self._cache[block_hash] = analysis
+                    analyses.append(analysis)
             self._blocks = analyses
             self._tip = analyses[0] if analyses else None
             self.app.call_from_thread(self._update_ui)
-        except BitcoinCLIError as exc:
+        except (BitcoinCLIError, BlockQueryError) as exc:
             msg = str(exc)
             if exc.hint:
                 msg += f" | {exc.hint}"
@@ -151,9 +162,10 @@ class Bip110Detector(Static):
             f"brc20:{t.brc20_count} op_ret:{t.op_return_count} "
             f"viol_wt:{t.violation_weight:,}"
         )
+        miner = safe_markup_text(t.miner_tag)
         tip_label.update(
             f"TIP #{t.height}  {t.hash[:16]}…  "
-            f"Miner: [bold]{t.miner_tag}[/]  "
+            f"Miner: {miner}  "
             f"BIP110 bit4: {signal}  "
             f"Spam: {t.spam_score}/100 [{t.status}]  "
             f"{breakdown}"

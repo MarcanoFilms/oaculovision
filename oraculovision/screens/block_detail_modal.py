@@ -1,4 +1,4 @@
-"""Block detail modal for BIP-110 detector."""
+"""Block detail modal for BIP-110 detector and block explorer."""
 
 from __future__ import annotations
 
@@ -6,18 +6,38 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Footer, Header, Label, Static
+from textual.widgets import DataTable, Footer, Header, Label, Static
 
-from oraculovision.analysis.bip110 import BlockAnalysis
+from oraculovision.analysis.bip110 import BlockAnalysis, TxAnalysis
 from oraculovision.utils.clipboard import copy_to_clipboard
+from oraculovision.utils.markup import safe_markup_text
+
+
+def _flagged_transactions(block: BlockAnalysis) -> list[TxAnalysis]:
+    bad = [
+        t for t in block.transactions
+        if t.has_bip110_violation or t.is_spam_signal
+    ]
+    bad.sort(key=lambda t: t.weight, reverse=True)
+    return bad
+
+
+def _tx_type(tx: TxAnalysis) -> str:
+    if tx.has_bip110_violation and tx.is_spam_signal:
+        return "viol+spam"
+    if tx.has_bip110_violation:
+        return "bip-110"
+    return "spam"
 
 
 class BlockDetailModal(ModalScreen[None]):
-    """Shows detailed analysis for a single block."""
+    """Shows block analysis with selectable flagged transactions."""
 
     BINDINGS = [
         Binding("escape", "dismiss", "Close"),
         Binding("c", "copy_hash", "Copy hash"),
+        Binding("t", "copy_txid", "Copy txid"),
+        Binding("i", "inspect_txid", "Inspect tx"),
     ]
 
     DEFAULT_CSS = """
@@ -25,16 +45,35 @@ class BlockDetailModal(ModalScreen[None]):
         align: center middle;
     }
     #block-dialog {
-        width: 80;
-        height: 85%;
+        width: 88;
+        height: 88%;
         background: #111;
         border: thick #ffd700;
         padding: 1 2;
     }
-    #block-scroll {
-        height: 1fr;
+    #block-meta-scroll {
+        height: auto;
+        max-height: 14;
     }
-    #copy-status {
+    #block-meta {
+        color: #e0e0e0;
+    }
+    #block-tx-header {
+        color: #ffd700;
+        text-style: bold;
+        padding: 1 0 0 0;
+    }
+    #block-tx-table {
+        height: 1fr;
+        min-height: 8;
+        border: solid #333;
+    }
+    #block-hint {
+        height: auto;
+        color: #666;
+        padding-top: 1;
+    }
+    #action-status {
         height: 1;
         color: #3dd68c;
     }
@@ -47,15 +86,43 @@ class BlockDetailModal(ModalScreen[None]):
     def __init__(self, block: BlockAnalysis) -> None:
         super().__init__()
         self.block = block
+        self._flagged = _flagged_transactions(block)
 
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical(id="block-dialog"):
             yield Label(self._title(), classes="detail-title")
-            yield Label("", id="copy-status")
-            with VerticalScroll(id="block-scroll"):
-                yield Static(self._body(), id="block-body")
+            yield Label("", id="action-status")
+            with VerticalScroll(id="block-meta-scroll"):
+                yield Static(self._meta_text(), id="block-meta")
+            yield Label(self._tx_section_title(), id="block-tx-header")
+            yield DataTable(
+                id="block-tx-table",
+                zebra_stripes=True,
+                cursor_type="row",
+            )
+            yield Label(self._hint_text(), id="block-hint")
         yield Footer()
+
+    def on_mount(self) -> None:
+        table = self.query_one("#block-tx-table", DataTable)
+        table.add_columns("Txid", "Weight", "Type", "Flags / Signals")
+        for tx in self._flagged[:50]:
+            flags = ", ".join(sorted(tx.bip110_flags)) or "—"
+            signals = ", ".join(sorted(tx.signals)) or "—"
+            detail = flags if flags != "—" else signals
+            if flags != "—" and signals != "—":
+                detail = f"{flags} · {signals}"
+            detail = detail[:48] + ("…" if len(detail) > 48 else "")
+            table.add_row(
+                f"{tx.txid[:18]}…",
+                f"{tx.weight:,}",
+                _tx_type(tx),
+                detail,
+                key=tx.txid,
+            )
+        if self._flagged:
+            table.move_cursor(row=0)
 
     def _title(self) -> str:
         b = self.block
@@ -65,56 +132,92 @@ class BlockDetailModal(ModalScreen[None]):
             f"{b.status}  ·  BIP110 bit4: {sig}"
         )
 
-    def _body(self) -> str:
+    def _meta_text(self) -> str:
         b = self.block
-        lines = [
-            f"[bold]Hash[/]       {b.hash}",
-            f"[bold]Miner[/]     {b.miner_tag}",
-            f"[bold]Weight[/]    {b.weight:,}  ({b.tx_count} txs)",
-            f"[bold]Witness[/]   {b.witness_pct:.1f}% of block weight",
+        miner = safe_markup_text(b.miner_tag)
+        return "\n".join([
+            f"Hash:     {b.hash}",
+            f"Miner:   {miner}",
+            f"Weight:  {b.weight:,}  ({b.tx_count} txs)  ·  "
+            f"Witness {b.witness_pct:.1f}%",
             "",
-            "[bold #ffd700]Spam breakdown[/]",
-            f"  Inscriptions:  {b.inscription_count}",
-            f"  BRC-20:        {b.brc20_count}",
-            f"  Runes:         {b.runes_count}",
-            f"  OP_RETURN:     {b.op_return_count}",
-            f"  BIP-110 viol:  {b.violation_count} txs  ({b.violation_weight:,} wt)",
-            "",
-            "[bold #ffd700]Problematic transactions[/]",
-        ]
-
-        bad = [
-            t for t in b.transactions
-            if t.has_bip110_violation or t.is_spam_signal
-        ]
-        bad.sort(key=lambda t: t.weight, reverse=True)
-
-        if not bad:
-            lines.append("  [green]No problematic transactions detected[/]")
-        else:
-            for tx in bad[:25]:
-                flags = ", ".join(sorted(tx.bip110_flags)) or "—"
-                signals = ", ".join(sorted(tx.signals)) or "—"
-                lines.append(
-                    f"  [red]{tx.txid[:16]}…[/]  wt={tx.weight:,}"
-                )
-                lines.append(f"    flags: {flags}")
-                lines.append(f"    signals: {signals}")
-            if len(bad) > 25:
-                lines.append(f"  … and {len(bad) - 25} more")
-
-        lines.extend([
-            "",
-            "[dim]c = copy hash · Esc = close[/]",
+            "Spam breakdown:",
+            f"  Inscriptions {b.inscription_count}  ·  BRC-20 {b.brc20_count}  ·  "
+            f"Runes {b.runes_count}  ·  OP_RETURN {b.op_return_count}",
+            f"  BIP-110 violations: {b.violation_count} tx "
+            f"({b.violation_weight:,} wt)",
         ])
-        return "\n".join(lines)
+
+    def _tx_section_title(self) -> str:
+        n = len(self._flagged)
+        if n == 0:
+            return "Flagged transactions — none detected"
+        return f"Flagged transactions — {n} tx (top {min(n, 50)} by weight)"
+
+    def _hint_text(self) -> str:
+        if not self._flagged:
+            return "c copy hash · Esc close"
+        return (
+            "↑↓ select tx · i or Enter inspect in Tx Inspector · "
+            "t copy txid · c copy hash · Esc close"
+        )
+
+    def _selected_txid(self) -> str | None:
+        table = self.query_one("#block-tx-table", DataTable)
+        coord = table.cursor_coordinate
+        if coord is None:
+            return None
+        cell_key = table.coordinate_to_cell_key(coord)
+        return str(cell_key.row_key.value)
+
+    def _show_status(self, message: str, *, warn: bool = False) -> None:
+        status = self.query_one("#action-status", Label)
+        if warn:
+            status.update(f"[yellow]{message}[/]")
+        else:
+            status.update(message)
 
     def action_copy_hash(self) -> None:
-        status = self.query_one("#copy-status", Label)
         if copy_to_clipboard(self.block.hash):
-            status.update("✓ Hash copied to clipboard")
+            self._show_status("✓ Block hash copied to clipboard")
         else:
-            status.update("[yellow]Could not copy (install wl-copy/xclip)[/]")
+            self._show_status("Could not copy hash (install wl-copy/xclip)", warn=True)
+
+    def action_copy_txid(self) -> None:
+        txid = self._selected_txid()
+        if not txid:
+            self._show_status("Select a flagged transaction first", warn=True)
+            return
+        if copy_to_clipboard(txid):
+            self._show_status(f"✓ Txid copied ({txid[:20]}…)")
+        else:
+            self._show_status("Could not copy txid (install wl-copy/xclip)", warn=True)
+
+    def _selected_tx_analysis(self) -> TxAnalysis | None:
+        txid = self._selected_txid()
+        if not txid:
+            return None
+        for tx in self._flagged:
+            if tx.txid == txid:
+                return tx
+        return None
+
+    def action_inspect_txid(self) -> None:
+        txid = self._selected_txid()
+        if not txid:
+            self._show_status("Select a flagged transaction first", warn=True)
+            return
+        raw_tx = self.block.flagged_raw.get(txid)
+        cached = self._selected_tx_analysis()
+        self.dismiss()
+        if hasattr(self.app, "inspect_transaction"):
+            self.app.inspect_transaction(
+                txid,
+                block_hash=self.block.hash,
+                block_height=self.block.height,
+                raw_tx=raw_tx,
+                cached_analysis=cached,
+            )
 
     def action_dismiss(self) -> None:
         self.dismiss()

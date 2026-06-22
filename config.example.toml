@@ -27,6 +27,9 @@ spam_block_score = 45
 # It analyzes every transaction the node would include — not a mempool sample.
 
 [bitcoin]
+# Active node profile (see [profiles.*] below).
+active_profile = "local"
+
 # Path to bitcoin-cli. Leave as "bitcoin-cli" if it is on your PATH,
 # or set an absolute path (e.g. /usr/local/bin/bitcoin-cli).
 cli_path = "bitcoin-cli"
@@ -39,8 +42,58 @@ datadir = ""
 # UTXO stats are not fetched on auto-refresh — press [u] in the dashboard.
 utxo_timeout = 120.0
 
+[profiles.local]
+cli_path = "bitcoin-cli"
+datadir = ""
+
+# Example remote RPC profile (uncomment and set credentials to use):
+# [profiles.remote-vps]
+# rpcconnect = "10.0.0.5"
+# rpcport = 8332
+# rpcuser = "your_rpc_user"
+# rpcpassword = "your_rpc_password"
+
+# Example SSH transport (bitcoin-cli runs on the remote host):
+# [profiles.ssh-node]
+# ssh_target = "user@your-mining-host"
+# cli_path = "bitcoin-cli"
+# datadir = "/home/user/.bitcoin"
+
 [ocean]
 # Default Bitcoin payout address on Ocean (bc1...).
 # Optional: press [o] in the dashboard to enter or change the address
 # for the current session (session override takes priority over this value).
 address = ""
+
+[control]
+# Read-only mode (default: true). When true, all node control/write RPCs
+# are blocked. Set to false only if you want peer ban/disconnect actions.
+read_only = true
+
+[chain_health]
+# Number of recent blocks to scan for Spam & Health (max 144).
+scan_blocks = 48
+
+[block_index]
+# Persistent SQLite cache for analyzed block summaries.
+enabled = true
+# Leave empty for ~/.local/share/oraculovision/block_index.db
+path = ""
+max_entries = 5000
+
+[export]
+# Audit trail exports (JSON + CSV) from Block Explorer, Tx Inspector, Spam & Health.
+directory = ""
+json = true
+csv = true
+
+[detectors]
+# Transaction detector plugins (pure analysis, no I/O).
+enabled = ["builtin"]
+# Add "example_dust" to flag sub-546-sat outputs as dust signals.
+
+[address]
+# Tx & Address Inspector settings.
+scantxoutset_timeout = 90.0
+max_vin_lookups = 4
+mempool_scan_limit = 30

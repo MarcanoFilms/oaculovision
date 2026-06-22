@@ -13,6 +13,29 @@ from pathlib import Path
 
 
 @dataclass
+class DatumJob:
+    """Active DATUM stratum job / block template snapshot."""
+
+    available: bool = False
+    job_id: str = "—"
+    height: str = "—"
+    coinbase_value_btc: str = "—"
+    prev_block_hash: str = "—"
+    target: str = "—"
+    witness_commitment: str = "—"
+    difficulty: str = "—"
+    version: str = "—"
+    bits: str = "—"
+    time_info: str = "—"
+    limits: str = "—"
+    size: str = "—"
+    weight: str = "—"
+    sigops: str = "—"
+    tx_count: str = "—"
+    coinbase_outputs: int = 0
+
+
+@dataclass
 class DatumStatus:
     available: bool = False
     gateway_state: str = "Unavailable"
@@ -77,6 +100,25 @@ def _extract_table_value(html: str, label: str) -> str | None:
     return value or None
 
 
+_JOB_LABELS = {
+    "job_id": "Job ID",
+    "height": "Block Height",
+    "coinbase_value_btc": "Block Value",
+    "prev_block_hash": "Previous Block",
+    "target": "Block Target",
+    "witness_commitment": "Witness Commitment",
+    "difficulty": "Block Difficulty",
+    "version": "Version",
+    "bits": "Bits",
+    "time_info": "Time",
+    "limits": "Limits",
+    "size": "Size",
+    "weight": "Weight",
+    "sigops": "Sigops",
+    "tx_count": "Txn Count",
+}
+
+
 def _parse_homepage(html: str) -> dict[str, str]:
     labels = {
         "shares_accepted": "Shares Accepted",
@@ -96,6 +138,50 @@ def _parse_homepage(html: str) -> dict[str, str]:
         if val:
             result[key] = val
     return result
+
+
+def parse_datum_job(html: str) -> DatumJob:
+    """Parse the Current Stratum Job table from DATUM homepage HTML."""
+    job = DatumJob()
+    if not html:
+        return job
+
+    parsed: dict[str, str] = {}
+    for key, label in _JOB_LABELS.items():
+        val = _extract_table_value(html, label)
+        if val:
+            parsed[key] = val
+
+    if not parsed:
+        return job
+
+    job.available = True
+    for key, value in parsed.items():
+        setattr(job, key, value)
+    return job
+
+
+def _count_coinbaser_outputs(html: str) -> int:
+    if not html:
+        return 0
+    rows = re.findall(
+        r"<TR><TD>[\d.]+\s*BTC</TD><TD>[^<]+</TD></TR>",
+        html,
+        re.IGNORECASE,
+    )
+    return len(rows)
+
+
+def fetch_datum_job() -> DatumJob:
+    """Fetch active DATUM job details from the gateway HTTP API."""
+    html = _fetch_html("/")
+    job = parse_datum_job(html or "")
+    if not job.available:
+        return job
+
+    coinbaser_html = _fetch_html("/coinbaser")
+    job.coinbase_outputs = _count_coinbaser_outputs(coinbaser_html or "")
+    return job
 
 
 def _count_clients(html: str) -> tuple[int, list[str]]:

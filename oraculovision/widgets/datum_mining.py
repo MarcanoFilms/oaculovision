@@ -7,7 +7,7 @@ from textual.containers import Vertical
 from textual.widgets import Label, Static
 
 from oraculovision.config import AppConfig
-from oraculovision.data.datum import DatumStatus, fetch_datum_status
+from oraculovision.data.datum import DatumJob, DatumStatus, fetch_datum_job, fetch_datum_status
 from oraculovision.data.ocean import (
     OceanAccountStats,
     OceanEarnings,
@@ -65,6 +65,32 @@ class DatumMining(Static):
     @staticmethod
     def _kv(label: str, value: str, width: int = _LABEL_WIDTH) -> str:
         return f"  {label.ljust(width)}{value}"
+
+    def _render_job_lines(self, job: DatumJob) -> list[str]:
+        if not job.available:
+            return ["", "[bold]CURRENT JOB[/]", "  [dim]No active stratum job[/]"]
+
+        prev = job.prev_block_hash
+        if len(prev) > 20:
+            prev = f"{prev[:16]}…"
+
+        lines = [
+            "",
+            "[bold #ffd700]──── CURRENT JOB ────[/]",
+            f"  Job ID     {job.job_id}",
+            f"  Height     {job.height}",
+            f"  Value      {job.coinbase_value_btc}",
+            f"  Prev block {prev}",
+            f"  Target     {job.target[:24] + '…' if len(job.target) > 24 else job.target}",
+            f"  Difficulty {job.difficulty}",
+            f"  Tx count   {job.tx_count}  weight {job.weight}  size {job.size}",
+            f"  Version    {job.version}  bits {job.bits}",
+            f"  Time       {job.time_info}",
+            f"  Limits     {job.limits}",
+        ]
+        if job.coinbase_outputs:
+            lines.append(f"  Coinbase   {job.coinbase_outputs} outputs (/coinbaser)")
+        return lines
 
     def _render_datum_lines(self, status: DatumStatus) -> list[str]:
         workers = status.workers
@@ -191,6 +217,7 @@ class DatumMining(Static):
             state_cls = "datum-warn"
 
         lines = self._render_datum_lines(status)
+        lines.extend(self._render_job_lines(fetch_datum_job()))
         self._append_ocean_lines(lines)
 
         label.update("\n".join(lines))
