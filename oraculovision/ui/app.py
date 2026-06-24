@@ -206,7 +206,7 @@ class SovereignApp(App):
         screen = self._current_screen()
         if screen:
             if self.config.ui.screen_transitions:
-                screen.animate("opacity", 1.0, duration=0.25)
+                screen.styles.animate("opacity", 1.0, duration=0.25)
             screen.refresh_screen()
 
     def _current_screen(self):

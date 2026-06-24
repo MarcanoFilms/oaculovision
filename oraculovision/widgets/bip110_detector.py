@@ -178,8 +178,8 @@ class Bip110Detector(Static):
         if self.alert_spam_block:
             self.add_class("alert-spam-block")
         if self.alert_spam_block and not prev:
-            self.animate("opacity", 0.5, duration=0.15)
-            self.set_timer(0.15, lambda: self.animate("opacity", 1.0, duration=0.3))
+            self.styles.animate("opacity", 0.5, duration=0.15)
+            self.set_timer(0.15, lambda: self.styles.animate("opacity", 1.0, duration=0.3))
 
         for block in self._blocks:
             self._blocks_by_height[str(block.height)] = block

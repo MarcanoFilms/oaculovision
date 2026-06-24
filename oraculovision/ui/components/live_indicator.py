@@ -60,8 +60,8 @@ class LiveIndicator(Static):
     def _pulse(self) -> None:
         if not self.is_fresh:
             return
-        self.animate("opacity", 0.3, duration=0.4)
-        self.set_timer(0.4, lambda: self.animate("opacity", 1.0, duration=0.4))
+        self.styles.animate("opacity", 0.3, duration=0.4)
+        self.set_timer(0.4, lambda: self.styles.animate("opacity", 1.0, duration=0.4))
 
     def render(self) -> str:
         return self._label

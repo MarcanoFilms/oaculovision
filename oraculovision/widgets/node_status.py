@@ -226,8 +226,8 @@ class NodeStatus(Static):
         elif self.alert_mempool:
             self.add_class("alert-mempool")
         if changed and (self.alert_peers or self.alert_mempool):
-            self.animate("opacity", 0.6, duration=0.15)
-            self.set_timer(0.15, lambda: self.animate("opacity", 1.0, duration=0.25))
+            self.styles.animate("opacity", 0.6, duration=0.15)
+            self.set_timer(0.15, lambda: self.styles.animate("opacity", 1.0, duration=0.25))
 
     def _clear_alerts(self) -> None:
         self.alert_peers = False
