@@ -30,7 +30,7 @@ from oraculovision.services.template_service import TemplateService
 from oraculovision.services.address_service import AddressInspection, AddressService
 from oraculovision.services.tx_service import TxInspectContext, TxInspection, TxService
 from oraculovision.ui.commands import OracleCommandProvider
-from oraculovision.ui.navigation import lite_screens, screen_by_id
+from oraculovision.ui.navigation import lite_screens
 from oraculovision.ui.screens.block_explorer import BlockExplorerScreen
 from oraculovision.ui.screens.dashboard import DashboardScreen
 from oraculovision.ui.screens.lite_dashboard import LiteDashboard
@@ -520,7 +520,7 @@ class SovereignApp(App):
         context = screen.export_context() if hasattr(screen, "export_context") else None
         try:
             paths = self._export_context(context)
-        except (ValueError, Exception) as exc:
+        except Exception as exc:
             self.notify(str(exc), title="Export failed", severity="error", timeout=5)
             return
 

@@ -54,9 +54,10 @@ class MilestoneTracker:
         return True
 
     def round_height_event(self, height: int) -> str | None:
-        """Return a milestone event_id if height is noteworthy, else None."""
-        if height % 100_000 == 0 and height > 0:
-            return f"height:{height}"
-        if height % 10_000 == 0 and height > 0:
+        """Return a milestone event_id for round-number heights, else None.
+
+        Every 10,000th block counts (which also covers the 100,000th).
+        """
+        if height > 0 and height % 10_000 == 0:
             return f"height:{height}"
         return None
