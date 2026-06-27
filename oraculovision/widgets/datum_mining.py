@@ -6,13 +6,14 @@ import time
 
 from textual import work
 from textual.app import ComposeResult
-from textual.containers import Vertical
 from rich.console import Group
 from rich.table import Table
 from rich.text import Text
-from textual.widgets import Label, Static
+from textual.widgets import Static
 
+from oraculovision.analysis.profitability import compute_profitability
 from oraculovision.config import AppConfig
+from oraculovision.services.worker_monitor import WorkerMonitor
 from oraculovision.widgets.anim import energy_glyph, trend_arrow
 from oraculovision.data.datum import DatumJob, DatumStatus, fetch_datum_job, fetch_datum_status
 from oraculovision.data.pyblock import fetch_community_blocks, fetch_datum_network
@@ -20,8 +21,6 @@ from oraculovision.widgets.treemap import render_block_treemap
 from oraculovision.data.ocean import (
     OceanAccountStats,
     OceanEarnings,
-    OceanWorker,
-    OceanBlock,
     fetch_ocean_account_stats,
     format_ocean_address,
     invalidate_ocean_cache,
@@ -51,6 +50,8 @@ class DatumMining(Static):
         self._anim_frame: int = 0
         self._gateway_active: bool = False
         self._prev_shares: int | None = None
+        # Tracks worker online/offline transitions to raise toast notifications.
+        self._worker_monitor = WorkerMonitor()
         # The block-template treemap only renders on the dedicated mining
         # screen; on the compact dashboard it would crowd the gateway info.
         self._show_treemap = show_treemap
@@ -70,6 +71,8 @@ class DatumMining(Static):
             invalidate_ocean_cache(previous)
         if self._session_ocean_address:
             invalidate_ocean_cache(self._session_ocean_address)
+        # Don't replay the new account's workers as "came online".
+        self._worker_monitor.reset()
 
     def on_mount(self) -> None:
         self.set_interval(0.5, self._tick_title)
@@ -160,16 +163,66 @@ class DatumMining(Static):
         ]
 
     @staticmethod
-    def _to_sats(btc_str: str) -> str:
-        """Convert an 'X.XXXXXXXX BTC' string into a grouped sats string."""
+    def _btc_str_to_sats(btc_str: str) -> int | None:
+        """Parse 'X.XXXXXXXX BTC' (with optional ~ prefix / suffix) into sats."""
         if not btc_str or btc_str == "—":
-            return "—"
-        token = btc_str.strip().split()[0]
+            return None
+        token = btc_str.strip().lstrip("~").split()[0]
         try:
-            sats = round(float(token) * 100_000_000)
+            return round(float(token) * 100_000_000)
         except (TypeError, ValueError):
-            return btc_str
+            return None
+
+    @classmethod
+    def _to_sats(cls, btc_str: str) -> str:
+        """Convert an 'X.XXXXXXXX BTC' string into a grouped sats string."""
+        sats = cls._btc_str_to_sats(btc_str)
+        if sats is None:
+            return btc_str if (btc_str and btc_str != "—") else "—"
         return f"{sats:,} sats"
+
+    def _net_earnings_lines(self, earnings: OceanEarnings) -> list[str]:
+        """Pool-fee / electricity-adjusted net figures (DeepSea-style).
+
+        Returns an empty list unless [mining] economics are configured, so
+        users who don't set them see no change.
+        """
+        mining = getattr(self.config, "mining", None)
+        if mining is None:
+            return []
+        has_fee = mining.pool_fee_pct > 0
+        has_power = mining.power_watts > 0 and mining.power_cost_per_kwh > 0
+        if not (has_fee or has_power):
+            return []
+        gross = self._btc_str_to_sats(earnings.est_per_day)
+        if not gross:
+            return []
+
+        p = compute_profitability(
+            gross_sats_day=gross,
+            power_watts=mining.power_watts,
+            power_cost_per_kwh=mining.power_cost_per_kwh,
+            pool_fee_pct=mining.pool_fee_pct,
+            btc_price=mining.btc_price,
+            currency=mining.currency,
+        )
+        lines = ["  [dim]────────────────[/]"]
+        if has_fee:
+            lines.append(
+                f"  💵 Net/day   [bold #3dd68c]{p.net_sats_day:,} sats[/]"
+                f"  [dim](fee {mining.pool_fee_pct:g}%)[/]"
+            )
+        if has_power:
+            lines.append(
+                f"  🔌 Power/day [#ff6600]{p.power_cost_day:.2f} {p.currency}[/]"
+            )
+            if p.has_fiat:
+                sign = "+" if p.net_fiat_day >= 0 else ""
+                color = "#3dd68c" if p.profitable else "#ff6b6b"
+                lines.append(
+                    f"  📈 Profit/day [bold {color}]{sign}{p.net_fiat_day:.2f} {p.currency}[/]"
+                )
+        return lines
 
     def _hashrate_column(self, stats: OceanAccountStats) -> list[str]:
         lines = ["[bold #00bcd4]📡 HASHRATE[/]"]
@@ -211,6 +264,7 @@ class DatumMining(Static):
 
         lines.append(f"  🎯 Next pay  [white]{self._to_sats(earnings.est_next_block)}[/]")
         lines.append(f"  🏆 Earned 30d [bold #ffd700]{self._to_sats(earnings.lifetime)}[/]")
+        lines.extend(self._net_earnings_lines(earnings))
         lines.append("  [dim]────────────────[/]")
 
         # Blocks found by my worker (30d)
@@ -287,7 +341,39 @@ class DatumMining(Static):
         address = self.active_ocean_address
         if not address:
             return Text.from_markup("\n".join(self._render_ocean_prompt()))
-        return self._build_ocean_section(fetch_ocean_account_stats(address))
+        stats = fetch_ocean_account_stats(address)
+        self._check_worker_transitions(stats)
+        return self._build_ocean_section(stats)
+
+    def _check_worker_transitions(self, stats: OceanAccountStats) -> None:
+        """Diff the active-worker set and toast any online/offline changes.
+
+        Runs on the fetch worker thread, so notifications are marshalled back
+        to the UI thread via call_from_thread.
+        """
+        if not stats.available or not stats.workers:
+            return
+        active = [w.name for w in stats.workers if w.is_active]
+        transitions = self._worker_monitor.update(active)
+        if not transitions:
+            return
+        self.app.call_from_thread(self._notify_worker_transitions, transitions)
+
+    def _notify_worker_transitions(self, transitions) -> None:
+        for name in transitions.came_online:
+            self.app.notify(
+                f"Worker back online: {name}",
+                title="✅ Worker online",
+                severity="information",
+                timeout=6,
+            )
+        for name in transitions.went_offline:
+            self.app.notify(
+                f"Worker stopped hashing: {name}",
+                title="⚠ Worker offline",
+                severity="warning",
+                timeout=8,
+            )
 
     @staticmethod
     def _age_since(ts: int) -> str:

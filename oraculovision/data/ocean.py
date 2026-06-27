@@ -64,6 +64,7 @@ class OceanEarnings:
     est_per_day: str = "—"
     unpaid: str = "—"
     unpaid_value: float = 0.0
+    payout_threshold: float = 0.001
     est_next_block: str = "—"
     lifetime: str = "—"
     blocks_earned_tides: int = 0
